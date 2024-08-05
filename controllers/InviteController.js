@@ -4,6 +4,7 @@ const Party = require("../models/PartySchema");
 const QRCode = require("../models/QrCodeSchema");
 const QRCodeGenerator = require("qrcode"); // Biblioteca para gerar QR Codes
 const UserSchema = require("../models/UserSchema");
+const { sendMessage } = require("../helpers/whatsappClient");
 // Função para criar um novo convite
 exports.createInvite = async (req, res) => {
   const { guestName, guestSurname, guestPhoto, email, phoneNumber } = req.body;
@@ -55,9 +56,8 @@ exports.createInvite = async (req, res) => {
 // Função para aprovar um convite e gerar um QR Code
 exports.approveInvite = async (req, res) => {
   const { inviteId } = req.params;
-
   try {
-    // Verifica se o convite existe
+    // // Verifica se o convite existe
     const invite = await Invite.findById(inviteId);
     if (!invite) {
       return res.status(404).json({ message: "Convite não encontrado." });
@@ -67,8 +67,8 @@ exports.approveInvite = async (req, res) => {
     if (invite.isApproved) {
       return res.status(400).json({ message: "Convite já aprovado." });
     }
-
-    // Gera o QR Code
+    const party = await Party.findById(invite.party);
+    // // Gera o QR Code
     const qrCodeData = `${invite._id}`; // Dados a serem codificados
     const qrCodeUrl = await QRCodeGenerator.toDataURL(qrCodeData);
 
@@ -86,9 +86,12 @@ exports.approveInvite = async (req, res) => {
     invite.qrCode = qrCode._id;
     await invite.save();
 
-    return res
-      .status(200)
-      .json({ message: "Convite aprovado com sucesso.", qrCodeUrl });
+    sendMessage(
+      invite.phoneNumber,
+      `Olá, ${invite.guestName} ${invite.guestSurname}. Seu convite para a festa (${party.name}) foi aprovado! http://192.168.100.23:3001/qrcode/${invite.qrCode}`
+    );
+
+    return res.status(200).json({ message: "Convite aprovado com sucesso." });
   } catch (error) {
     console.error("Erro ao aprovar convite:", error.message);
     return res
