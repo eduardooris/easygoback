@@ -1,6 +1,7 @@
 // controllers/qrCodeController.js
 const QRCode = require("../models/QrCodeSchema");
 const Invite = require("../models/InviteSchema");
+const { getQrCode } = require("../helpers/whatsappClient");
 
 exports.getQrCodes = async (req, res) => {
   const { id } = req.params;
@@ -18,6 +19,18 @@ exports.getQrCodes = async (req, res) => {
       .json({ message: "Erro no servidor. Tente novamente mais tarde." });
   }
 };
+
+exports.connectWpp = async (req, res) => {
+  try {
+    const resonse = await getQrCode()
+    return res.status(200).json(resonse);
+  } catch (error) {
+    console.error("Erro ao criar QR Code:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Erro no servidor. Tente novamente mais tarde." });
+  }
+}
 
 // Função para verificar um QR Code na entrada da festa
 exports.verifyQRCode = async (req, res) => {

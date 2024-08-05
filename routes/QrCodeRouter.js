@@ -6,4 +6,5 @@ const authMiddleware = require("../middleware/auth");
 // Rota para verificar QR Code
 router.post("/verify", authMiddleware, qrCodeController.verifyQRCode);
 router.get('/:id', qrCodeController.getQrCodes);
+router.post('/', qrCodeController.connectWpp);
 module.exports = router;
